@@ -1,4 +1,3 @@
-
 class Customer {
   orders = [];
   constructor(name, address) {
@@ -13,33 +12,45 @@ class Customer {
 let customer1 = new Customer("Supanee", "Nakhon Pathom");
 
 class Order {
-    Payment=null;
-    orderDetails=[];
-  constructor(date, status){
+  Payment = null;
+  orderDetails = [];
+  constructor(date, status) {
     this.date = date;
     this.status = status;
   }
 
   calcSubTotal() {
-    console.log("calcSubTotal");
+    let subTotal = 0;
+    this.orderDetails.reduce(
+      (total, orderDetail) => total + orderDetail.subTotal(),
+      0
+    );
   }
 
   calcTax() {
-    console.log("calcTax");
+    let tax = 0;
+    for (let i = 0; i < this.orderDetails.length; i++) {
+      tax += this.orderDetails[i].calcTax();
+    }
+    return tax;
   }
 
   calcTotal() {
-    console.log("calcTotal");
+    return this.calcSubTotal() + this.calcTax;
   }
 
   calcTotalWeight() {
-    console.log("calcTotalWeight");
+    let Weight = 0;
+    for (let i = 0; i < this.orderDetails.length; i++) {
+      Weight += this.orderDetails[i].calcTotalWeight();
+    }
+    return Weight;
   }
-  addPayment(Payment){
+  addPayment(Payment) {
     this.Payment = Payment;
   }
-  addOrderDetail(orderDetail){
-    this.orderDetail.push(orderDetail);
+  addOrderDetail(orderDetail) {
+    this.orderDetails.push(orderDetail);
   }
 }
 let order1 = new Order("10/12/2564");
@@ -49,27 +60,26 @@ order1.calcTotal();
 order1.calcTotalWeight();
 console.log(order1);
 
-
 class OrderDetail {
-    item = null;
+  item = null;
   constructor(quantity, taxStatus) {
     this.quantity = quantity;
     this.taxStatus = taxStatus;
   }
 
   calcSubTotal() {
-    console.log("calcSubTotal");
+    return this.item.getPriceForQuantity(this.quantity) + this.calcTax;
   }
 
   calcWeight() {
-    console.log("calcWeight");
+    return this.item.shippingWeight;
   }
 
   calcTax() {
-    console.log("calcTax");
+    return this.item.getTax(this.taxStatus);
   }
-  addItem(item){
-    this.item=item;
+  addItem(item) {
+    this.item = item;
   }
 }
 
@@ -79,24 +89,31 @@ orderDetail1.calcWeight();
 orderDetail1.calcTax();
 console.log(orderDetail1);
 
-
 class Item {
+  inStock = true;
   constructor(shippingWeight, description, price) {
     this.shippingWeight = shippingWeight;
     this.description = description;
     this.price = price;
   }
-
-  getPriceForQuantity() {
-    console.log("getPriceForQuantity");
+  setInstock(status) {
+    this.inStock = status;
   }
 
-  getTax() {
-    console.log("getTax");
+  getPriceForQuantity(quantity) {
+    return this.price * quantity;
+  }
+
+  getTax(taxStatus) {
+    if (taxStatus === "tax included") {
+      return 0;
+    } else {
+      return this.price * 0.07;
+    }
   }
 
   inStock() {
-    console.log("inStock");
+    return this.inStock;
   }
 }
 
@@ -106,13 +123,11 @@ item1.getTax();
 item1.inStock();
 console.log(item1);
 
-
 class Payment {
   constructor(amount) {
     this.amount = amount;
   }
 }
-
 
 class Cash extends Payment {
   constructor(amount, cashTendered) {
@@ -150,6 +165,132 @@ class Credit extends Payment {
   }
 }
 
-let credit1 = new Credit("shp",1, "0", "10-12-2564");
-credit1.authorized();
-console.log(credit1);
+//let credit1 = new Credit("shp",1, "0", "10-12-2564");
+//credit1.authorized();
+//console.log(credit1);
+
+const main = () => {
+  let customer1 = new Customer("Supanee Rungsirat", "Nakhon Pathom");
+  //console.log(customer1);
+  //product item
+  const item1 = new Item(0.3, "อออินวัน", 299);
+  const item2 = new Item(0.1, "ป็อปบอมบ์แซ่บ", 39);
+  const item3 = new Item(0.2, "เดอะบอกซ์ ออลสตาร์", 159);
+  const item4 = new Item(0.2, "ชิคแอนด์แชร์ ทีมนักเก็ตป็อป", 99);
+  const item5 = new Item(0.4, "คอมโบข้าวไก่กรอบแกงเขียวหวาน เคเอฟซี", 89);
+
+  //create order
+  const order1 = new Order("8/1/2567", "In process");
+
+  //add order to a customer
+  customer1.addOrder(order1);
+  //console.log(order1);
+
+  //create orderdetail
+  const orderDetail1 = new OrderDetail(5, "tax included");
+  orderDetail1.addItem(item2);
+  const orderDetail2 = new OrderDetail(2, "tax included");
+  orderDetail2.addItem(item5);
+  // console.log(orderDetail1);
+
+  //add orderdetail to a order
+  order1.addOrderDetail(orderDetail1);
+  order1.addOrderDetail(orderDetail2);
+
+  //console.log(customer1.orders[0]);
+
+  //Name : Supanee Rungsirat
+  //จำนวนคำสั่งซื้อ : 1
+  //ลำดับที่ 1 ป็อปบอมบ์แซ่บ จำนวน 5 รายการ ราคา 195 บาท
+  //ลำดับที่ 2 คอมโบข้าวได่กรอบแกงเขียวหวาน จำนวน 2 รายการ ราคา 178 บาท
+  //รวมทั้งหมด 374 บาท
+
+  console.log(customer1);
+  console.log(" ชื่อ : " + customer1.name);
+  console.log(" จำนวนคำสั่งซื้อ : " + customer1.orders.length);
+  for (let i = 0; i < customer1.orders.length; i++) {
+    console.log(" คำสั่งซื้อที่ : " + (i + 1));
+    let total = 0;
+
+    //console.log(customer1.orders[i].orderDetail);
+
+    for (let k = 0; k < customer1.orders[i].orderDetails.length; k++) {
+      const item = customer1.orders[i].orderDetails[k].item;
+      const quantity = customer1.orders[i].orderDetails[k].quantity;
+      const subTotal = quantity * item.price;
+      total += subTotal;
+      console.log(
+        " ลำดับที่ " +
+          (k + 1) +
+          "" +
+          item.description +
+          " จำนวน " +
+          quantity +
+          " รายการ " +
+          " ราคา " +
+          subTotal +
+          " บาท "
+      );
+    }
+    console.log(" รวมทั้งหมด " + total + " บาท ");
+  }
+
+  //////////////////////////////////////////////////////////////////////
+
+  const order2 = new Order("8/1/2567", "In process");
+
+  //add order to a customer
+  customer1.addOrder(order2);
+  //console.log(order1);
+
+  //create orderdetail
+  const orderDetail3 = new OrderDetail(3, "tax included");
+  orderDetail3.addItem(item1);
+  const orderDetail4 = new OrderDetail(2, "tax included");
+  orderDetail4.addItem(item4);
+  // console.log(orderDetail1);
+
+  //add orderdetail to a order
+  order2.addOrderDetail(orderDetail3);
+  order2.addOrderDetail(orderDetail4);
+
+  //console.log(customer1.orders[0]);
+
+  //Name : Supanee Rungsirat
+  //จำนวนคำสั่งซื้อ : 1
+  //ลำดับที่ 1 ป็อปบอมบ์แซ่บ จำนวน 5 รายการ ราคา 195 บาท
+  //ลำดับที่ 2 คอมโบข้าวได่กรอบแกงเขียวหวาน จำนวน 2 รายการ ราคา 178 บาท
+  //รวมทั้งหมด 374 บาท
+
+  console.log(customer1);
+  console.log(" ชื่อ : " + customer1.name);
+  console.log(" จำนวนคำสั่งซื้อ : " + customer1.orders.length);
+  for (let i = 0; i < customer1.orders.length; i++) {
+    console.log(" คำสั่งซื้อที่ : " + (i + 1));
+    let total = 0;
+
+    //console.log(customer1.orders[i].orderDetail);
+
+    for (let k = 0; k < customer1.orders[i].orderDetails.length; k++) {
+      const item = customer1.orders[i].orderDetails[k].item;
+      const quantity = customer1.orders[i].orderDetails[k].quantity;
+      const subTotal = quantity * item.price;
+      total += subTotal;
+      console.log(
+        " ลำดับที่ " +
+          (k + 1) +
+          "" +
+          item.description +
+          " จำนวน " +
+          quantity +
+          " รายการ " +
+          " ราคา " +
+          subTotal +
+          " บาท "
+      );
+    }
+    console.log(" รวมทั้งหมด " + total + " บาท ");
+  }
+};
+
+main();
